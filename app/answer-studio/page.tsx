@@ -41,6 +41,7 @@ export default function AnswerStudioPage() {
   const [busy,setBusy]=useState(false),[notice,setNotice]=useState(''),[failed,setFailed]=useState(false);
   const [saved,setSaved]=useState<StudioDraft|null>(null),[downloads,setDownloads]=useState<StudioDownload[]>([]);
   const [output,setOutput]=useState<StudioOutputMode>('full');
+  const [includeTranscriptionHints,setIncludeTranscriptionHints]=useState(true);
   const links=useRef(new StudioDownloads()),running=useRef(false);
   useEffect(()=>{
     let active=true;const urls=links.current;
@@ -88,7 +89,7 @@ export default function AnswerStudioPage() {
       setNotice('正在生成 Word…');
       const {buildStudioWord}=await import('../../lib/answer-studio-export');
       const label=studioOutputs.find(item=>item.value===variant)!.label;
-      const blob=await buildStudioWord(result,variant,{transcription:true,bestEffort:true});
+      const blob=await buildStudioWord(result,variant,{transcription:true,bestEffort:true,includeTranscriptionHints});
       setDownloads(links.current.offer(blob,`${result.title}_${label}.docx`,'下载 Word'));
       setNotice('');
     }catch(e){setFailed(true);setNotice(e instanceof Error?e.message:'转录失败');}
@@ -120,12 +121,16 @@ export default function AnswerStudioPage() {
             <input id={`studio-output-${item.value}`} type="radio" name="studio-output" value={item.value} checked={output===item.value} onChange={()=>{setOutput(item.value);setDownloads(links.current.invalidate());setNotice(item.value==='full'?'已选择完整解题版，生成时将处理尚未完成的配图。':'已选择无图版本，将跳过配图处理，直接生成 Word。');setFailed(false);}}/>
             <span className="output-icon"><StudioIcon name={item.value==='full'?'spark':item.value==='text'?'text':'steps'}/></span><span className="output-copy"><strong>{item.label}</strong><small>{item.value==='full'?(studioIncludesQuestionFigures(saved)?'原题、解析、原题图和解答图。':'原题文字、解析和解答图（含必要底图）。'):item.description}</small></span>
           </label>)}
+          <label className={includeTranscriptionHints?'output-choice selected':'output-choice'} aria-label="Word 转录问题提示">
+            <input type="checkbox" checked={includeTranscriptionHints} onChange={e=>{setIncludeTranscriptionHints(e.target.checked);setDownloads(links.current.invalidate());setFailed(false);}}/>
+            <span className="output-copy"><strong>在 Word 中显示转录问题提示</strong><small>关闭后仅隐藏“转录提示 / 格式问题”等校对提醒，不影响转录内容和导出。</small></span>
+          </label>
         </fieldset>
         {studioOutputBlocker(saved,output)&&<p className="studio-notice" role="status">{studioOutputBlocker(saved,output)}</p>}
         {!downloads.some(file=>file.label==='下载 Word')&&<button className="primary simple-start" disabled={busy||!!studioOutputBlocker(saved,output)} onClick={()=>void start(output)}>{busy?'正在生成…':output==='full'?'生成完整解题版':'生成无图 Word'}</button>}
         {downloads.filter(file=>file.label==='下载 Word').map(file=><a key={file.url} className="studio-download" href={file.url} download={file.name}>下载{studioOutputs.find(item=>item.value===output)!.label}</a>)}
       </section>}
-      <small className="studio-privacy">所选材料会发送至已配置的 AI 服务。任务保存在当前浏览器，不跨设备同步；识别有疑问处会在 Word 中提示。</small>
+      <small className="studio-privacy">所选材料会发送至已配置的 AI 服务。任务保存在当前浏览器，不跨设备同步；可选择是否在 Word 中保留转录问题提示。</small>
     </section>
   </main>;
 }
