@@ -16,13 +16,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - name: Package exact source snapshot for reproducible verification
-        run: git archive --format=tar HEAD > source-snapshot.tar
-      - uses: actions/upload-artifact@v4
-        with:
-          name: source-snapshot-${{ github.sha }}
-          path: source-snapshot.tar
-          retention-days: 3
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -47,7 +40,7 @@ jobs:
             const pkg = JSON.parse(fs.readFileSync(path.join(found, 'package.json'), 'utf8'));
             for (const dep of Object.keys({...pkg.dependencies, ...pkg.optionalDependencies})) visit(dep, found);
           }
-          for (const name of ['typescript', 'esbuild', 'docx', 'jszip', 'katex', 'fast-xml-parser', '@types/node']) visit(name);
+          for (const name of ['typescript', 'esbuild', 'docx', 'jszip', 'katex', 'fast-xml-parser', 'react', 'react-dom', 'pdfjs-dist', '@types/node', '@types/react', '@types/react-dom']) visit(name);
           for (const dir of seen) console.log(path.relative(process.cwd(), dir));
           JS
           tar -czf test-runtime.tgz -T runtime-paths.txt
