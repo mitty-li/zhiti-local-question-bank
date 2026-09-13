@@ -49,10 +49,12 @@ function responsesUnsupported(result:UpstreamResult) {
     ||[400,422].includes(result.status)&&/(?:unsupported|not supported|does not support).*(?:responses|endpoint)|(?:responses|endpoint).*(?:unsupported|not supported)/i.test(result.error||'');
 }
 async function callConfiguredModel(input:RecognitionModelInput):Promise<UpstreamResult> {
-  const mode=process.env.OPENAI_API_MODE||'auto';
-  if(mode==='antigravity_gemini')return callAntigravityGemini(process.env.OPENAI_BASE_URL||'https://api.openai.com',input.apiKey,process.env.OPENAI_VISION_MODEL||'gemini-3.8-flash-high',input.prompt,[input.image],input.schema,recognitionReasoningEffort(),input.signal);
-  if(mode==='chat_completions')return callChatCompletions(input);
-  if(mode==='responses')return callResponses(input);
+  const mode = process.env.OPENAI_API_MODE || "auto";
+  if (mode === "antigravity_gemini") {
+    return callAntigravityGemini(process.env.OPENAI_BASE_URL || "https://api.openai.com", input.apiKey, process.env.OPENAI_VISION_MODEL || "gemini-3.8-flash-high", input.prompt, [input.image], input.schema, recognitionReasoningEffort(), input.signal);
+  }
+  if (mode === "chat_completions") return callChatCompletions(input);
+  if (mode === "responses") return callResponses(input);
   const key=await capabilityKey(input.apiKey),until=chatEndpoints.get(key);
   if(until&&until>Date.now())return callChatCompletions(input);
   chatEndpoints.delete(key);
