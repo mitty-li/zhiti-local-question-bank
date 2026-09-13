@@ -1,0 +1,31 @@
+name: Math and recognition regression
+on:
+  push:
+    branches: [fix/math-contract-recognition-20260913]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: math-recognition-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Package exact source snapshot for reproducible verification
+        run: git archive --format=tar HEAD > source-snapshot.tar
+      - uses: actions/upload-artifact@v4
+        with:
+          name: source-snapshot-${{ github.sha }}
+          path: source-snapshot.tar
+          retention-days: 3
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
