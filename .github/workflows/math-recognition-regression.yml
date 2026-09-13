@@ -28,4 +28,32 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Package minimal offline test runtime
+        run: |
+          node --input-type=module <<'JS' > runtime-paths.txt
+          import fs from 'node:fs';
+          import path from 'node:path';
+          const seen = new Set();
+          function visit(name, parent = process.cwd()) {
+            let dir = parent, found;
+            while (true) {
+              const candidate = path.join(dir, 'node_modules', name);
+              if (fs.existsSync(path.join(candidate, 'package.json'))) { found = candidate; break; }
+              if (path.dirname(dir) === dir) return;
+              dir = path.dirname(dir);
+            }
+            if (seen.has(found)) return;
+            seen.add(found);
+            const pkg = JSON.parse(fs.readFileSync(path.join(found, 'package.json'), 'utf8'));
+            for (const dep of Object.keys({...pkg.dependencies, ...pkg.optionalDependencies})) visit(dep, found);
+          }
+          for (const name of ['typescript', 'esbuild', 'docx', 'jszip', 'katex', 'fast-xml-parser', '@types/node']) visit(name);
+          for (const dir of seen) console.log(path.relative(process.cwd(), dir));
+          JS
+          tar -czf test-runtime.tgz -T runtime-paths.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: test-runtime
+          path: test-runtime.tgz
+          retention-days: 1
       - run: npm test
