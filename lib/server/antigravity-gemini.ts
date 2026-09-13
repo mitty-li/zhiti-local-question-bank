@@ -65,10 +65,12 @@ export async function callAntigravityGemini(
   images: string[],
   schema: JsonSchema,
   reasoningEffort = "high",
+  signal?: AbortSignal,
 ): Promise<AntigravityResult> {
   const imageParts = images.map(inlineImage).filter((part): part is NonNullable<typeof part> => Boolean(part));
   const endpoint = `${antigravityApiBase(configuredBase)}/models/${encodeURIComponent(model)}:generateContent`;
   const response = await fetch(endpoint, {
+    signal,
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({

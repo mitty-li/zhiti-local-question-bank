@@ -48,3 +48,7 @@ yarn-error.log*
 /work/
 /artifacts/
 *.tsbuildinfo
+
+# Optional Studio browser regression output
+/.studio-browser-test/
+/studio-browser-results/

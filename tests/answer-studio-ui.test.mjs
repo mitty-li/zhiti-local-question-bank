@@ -28,7 +28,7 @@ async function fixture(t){
 const draft={version:1,inputMode:'answers',title:'界面验证',pages:[],answers:[],questions:[{id:'q',stem:'原题',analysis:'解析',answerIds:[],diagrams:[],tables:[],warnings:Array.from({length:102},(_,i)=>`原有提示${i}`)}]};
 function render({Page,seed},{saved=draft,busy=false,notice='',failed=false,downloads=[]}={}){
   // useState order in AnswerStudioPage: auth, input fields, lifecycle, result.
-  seed([{id:'local',local:true},true,'answers','界面验证',[],[],busy,notice,failed,saved,downloads,'full']);
+  seed([{id:'local',local:true},true,'answers','界面验证',[],[],busy,notice,failed,saved,downloads,'full',true,4]);
   return renderToStaticMarkup(createElement(Page));
 }
 test('ready and downloaded results hide issue statistics and backup controls without changing the draft',async t=>{
@@ -37,7 +37,7 @@ test('ready and downloaded results hide issue statistics and backup controls wit
     const html=render(ui,{downloads,notice:'完整解题版已生成：1 题。发现 102 个提示，已写入 Word。'});
     assert.match(html,/转录结果/);assert.match(html.replace(/<[^>]+>/g,''),/1道题已识别/);
     assert.equal((html.match(/name="studio-output"/g)||[]).length,3);
-    assert.equal(html.includes('生成完整解题版'),downloads.length===0);
+    assert.equal(html.includes('生成 Word'),downloads.length===0);
     assert.equal(html.includes('下载完整解题版'),downloads.length>0);
     assert.doesNotMatch(html,/102|个提示|当前记录|已生成|本地项目备份|生成备份|恢复 JSON|application\/json|三种版本共用/);
   }
